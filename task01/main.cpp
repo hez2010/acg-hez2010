@@ -50,6 +50,8 @@ void draw_polygon(
     const std::vector<float> &polygon_xy,
     std::vector<unsigned char> &img_data, unsigned int width, unsigned int height,
     unsigned int brightness) {
+  const double pi = std::acos(-1);
+
   for (unsigned int ih = 0; ih < height; ++ih) {
     for (unsigned int iw = 0; iw < width; ++iw) {
       const auto x = float(iw) + 0.5f; // x-coordinate of the center of the pixel
@@ -65,7 +67,17 @@ void draw_polygon(
         float p1x = polygon_xy[i1_vtx * 2 + 0] - x;
         float p1y = polygon_xy[i1_vtx * 2 + 1] - y;
         // write a few lines of code to compute winding number (hint: use atan2)
+        float theta = std::atan2(p1y, p1x) - std::atan2(p0y, p0x);
+        if (theta > pi) {
+            theta -= 2 * pi;
+        }
+        else if (theta < -pi) {
+            theta += 2 * pi;
+        }
+        winding_number += theta;
       }
+      winding_number /= 2 * pi;
+      winding_number = std::abs(winding_number);
       const int int_winding_number = int(std::round(winding_number));
       if (int_winding_number == 1 ) { // if (x,y) is inside the polygon
         img_data[ih*width + iw] = brightness;
@@ -91,6 +103,28 @@ void dda_line(
   auto dx = x1 - x0;
   auto dy = y1 - y0;
   // write some code below to paint pixel on the line with color `brightness`
+  if (std::abs(dx) > std::abs(dy)) {
+    if (x0 > x1) {
+      std::swap(x0, x1);
+      std::swap(y0, y1);
+    }
+    auto m = dy / dx, y = y0;
+    for (auto x = x0; x <= x1; x += 1) {
+      img_data[(unsigned int)y * width + (unsigned int)x] = brightness;
+      y += m;
+    }
+  }
+  else {
+    if (y0 > y1) {
+      std::swap(x0, x1);
+      std::swap(y0, y1);
+    }
+    auto m = dx / dy, x = x0;
+    for (auto y = y0; y <= y1; y += 1) {
+      img_data[(unsigned int)y * width + (unsigned int)x] = brightness;
+      x += m;
+    }
+  }
 }
 
 int main() {
