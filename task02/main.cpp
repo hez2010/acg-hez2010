@@ -64,9 +64,58 @@ int number_of_intersection_ray_against_quadratic_bezier(
     const Eigen::Vector2f &ps,
     const Eigen::Vector2f &pc,
     const Eigen::Vector2f &pe) {
-  // comment out below to do the assignment
-  return number_of_intersection_ray_against_edge(org, dir, ps, pe);
-  // write some code below to find the intersection between ray and the quadratic
+  // rotation angle
+  const float theta = -atan2(dir.y(), dir.x());
+  // rotation matrix
+  const Eigen::Matrix3f rotation =
+    (Eigen::Matrix3f() <<
+      cos(theta), -sin(theta), 0,
+      sin(theta), cos(theta),  0,
+      0,          0,           1)
+    .finished();
+  // translation matrix
+  const Eigen::Matrix3f translation =
+    (Eigen::Matrix3f() <<
+      1, 0, -org.x(),
+      0, 1, -org.y(),
+      0, 0, 1)
+    .finished();
+  // transform with homogeneous coordinates so that org = (0, 0), dir = (1, 0)
+  const Eigen::Vector3f org_h = rotation * (translation * (Eigen::Vector3f() << org, 1).finished());
+  const Eigen::Vector3f dir_h = rotation * (translation * (Eigen::Vector3f() << dir.normalized(), 0).finished());
+  const Eigen::Vector3f ps_h = rotation * (translation * (Eigen::Vector3f() << ps, 1).finished());
+  const Eigen::Vector3f pc_h = rotation * (translation * (Eigen::Vector3f() << pc, 1).finished());
+  const Eigen::Vector3f pe_h = rotation * (translation * (Eigen::Vector3f() << pe, 1).finished());
+  // solving (1 - t)^2 * ps + 2 * t * (1 - t) * pc + t^2 * pe = org + s * dir
+  // => (ps - 2 * pc + pe) * t^2 + 2 * (pc - ps) * t + ps = org + s * dir
+  // => a * t^2 + b * t + c = (s, 0)
+  // where t > 0 and < 1, s > 0
+  const Eigen::Vector2f a = (ps_h - 2 * pc_h + pe_h).head(2);
+  const Eigen::Vector2f b = (2 * (pc_h - ps_h)).head(2);
+  const Eigen::Vector2f c = (ps_h).head(2);
+  const float discriminant = b.y() * b.y() - 4 * a.y() * c.y();
+  // d < 0, no intersection
+  if (discriminant < 0)
+    return 0;
+  const float t1 = (-b.y() + sqrt(discriminant)) / (2 * a.y());
+  const float t2 = (-b.y() - sqrt(discriminant)) / (2 * a.y());
+  const float s1 = a.x() * t1 * t1 + b.x() * t1 + c.x();
+  const float s2 = a.x() * t2 * t2 + b.x() * t2 + c.x();
+  // d == 0, maybe one intersection
+  if (abs(discriminant) < std::numeric_limits<float>::epsilon()) {
+    if (t1 > 0 && t1 < 1 && s1 > 0) {
+      return 1;
+    }
+    return 0;
+  }
+  // d > 0, maybe two intersections
+  int count = 0;
+  if (t1 > 0 && t1 < 1 && s1 > 0) {
+    count += 1;
+  }
+  if (t2 > 0 && t2 < 1 && s2 > 0)
+    count += 1;
+  return count;
 }
 
 int main() {
