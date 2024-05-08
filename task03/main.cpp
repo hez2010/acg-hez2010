@@ -70,6 +70,20 @@ void draw_3d_triangle_with_texture(
       Eigen::Matrix4f coeff;
       Eigen::Vector4f rhs;
 
+      // coeff = [q0, q1, q2, s], rhs = [s]
+      // coeff * bc = rhs
+      coeff << q0[0], q1[0], q2[0], s[0],
+               q0[1], q1[1], q2[1], s[1],
+               q0[2], q1[2], q2[2], -1.0,
+               q0[3], q1[3], q2[3], 1.0;
+
+      rhs << s[0], s[1], 1.0, 1.0;
+
+      // bc = coeff^-1 * rhs
+      bc = (coeff.inverse() * rhs).head(3);
+      // normalize the barycentric coordinate
+      bc /= bc.sum();
+
       // do not change below
       auto uv = uv0 * bc[0] + uv1 * bc[1] + uv2 * bc[2]; // uv coordinate of the pixel
       // compute pixel coordinate of the texture
