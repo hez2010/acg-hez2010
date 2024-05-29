@@ -57,7 +57,7 @@ auto sample_hemisphere(
   // For Problem 4, write some code below to sample hemisphere with cosign weight
   // (i.e., the sampling frequency is higher at the top)
 
-  const float theta = std::acos(std::sqrt(z));
+  const float theta = std::asin(std::sqrt(z));
   auto dir_loc = Eigen::Vector3f(
       std::sin(theta) * std::cos(phi),
       std::sin(theta) * std::sin(phi),
