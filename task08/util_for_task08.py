@@ -18,7 +18,7 @@ def edge2vtx_from_tri2vtx(tri2vtx) -> numpy.typing.NDArray:
     return edge2vtx
 
 
-def cylinder_mesh_zup(r, l, n) -> (numpy.typing.NDArray, numpy.typing.NDArray):
+def cylinder_mesh_zup(r, l, n) -> tuple[numpy.typing.NDArray, numpy.typing.NDArray]:
     '''
 
     :param r:
