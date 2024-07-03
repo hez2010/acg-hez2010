@@ -131,14 +131,15 @@ class HelloWorld(mglw.WindowConfig):
         self.vtx2xyz_def[self.fixear2vtx, 0] += -0.5 * math.sin(time)
         self.vtx2xyz_def[self.fixback2vtx, 2] += -0.3 * math.sin(2. * time)
 
-        # write a few line code below to implement laplacian mesh deformation
-        # Problem 2: Laplacian deformation, which minimizes (x-x_def)D(x-x_def) + (x-x_ini)L(x-x_ini) w.r.t x,
-        # Problem 3: Bi-Laplacian deformation, which minimizes (x-x_def)D(x-x_def) + (x-x_ini)L^2(x-x_ini) w.r.t x,
+        # Laplacian deformation, which minimizes (x-x_def)D(x-x_def) + (x-x_ini)L(x-x_ini) w.r.t x,
+        self.vtx2xyz_def = np.ascontiguousarray(spsolve(self.matrix_fix + self.matrix_laplace, self.matrix_fix.dot(self.vtx2xyz_def) + self.matrix_laplace.dot(self.vtx2xyz_ini))).astype(np.float32)
+
+        # Bi-Laplacian deformation, which minimizes (x-x_def)D(x-x_def) + (x-x_ini)L^2(x-x_ini) w.r.t x,
         # where D is the diagonal matrix with entry 1 if the vertex is fixed, 0 if the vertex is free, a.k.a `self.matrix_fix`
         # L is the graph Laplacian matrix a.k.a `self.matrix_laplace`
         # you may use `spsolve` to solve the liner system
         # spsolve: https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.spsolve.html#scipy.sparse.linalg.spsolve
-
+        self.vtx2xyz_def = np.ascontiguousarray(spsolve(self.matrix_fix + self.matrix_bilaplace, self.matrix_fix.dot(self.vtx2xyz_def) + self.matrix_bilaplace.dot(self.vtx2xyz_ini))).astype(np.float32)
 
         # do not edit beyond here
         # above: deformation
